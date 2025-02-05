@@ -103,6 +103,8 @@ public actor SpeechRecognizer: ObservableObject {
 
         if let result {
             transcribe(result.bestTranscription.formattedString)
+            // TODO: Hook here to pass transcribed result to LLM/LAM to perform action on VIM file.
+            // Need to decide where the CoreML model actually lives ...
         }
     }
 
