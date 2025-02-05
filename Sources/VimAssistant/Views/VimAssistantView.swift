@@ -20,7 +20,7 @@ public struct VimAssistantView: View {
 
     /// Initializer.
     /// - Parameter enabled: flag indicating if the assistant should be enabled or not
-    init?(vim: Vim, _ enabled: Bool = false) {
+    public init?(vim: Vim, _ enabled: Bool = false) {
         if !enabled { return nil }
         self.vim = vim
     }
