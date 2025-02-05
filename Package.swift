@@ -5,17 +5,29 @@ import PackageDescription
 
 let package = Package(
     name: "VimAssistant",
+    platforms: [
+        .iOS(.v18),
+        .macOS(.v15),
+        .visionOS(.v2)
+    ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "VimAssistant",
-            targets: ["VimAssistant"]),
+            targets: ["VimAssistant"]
+        ),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/codefiesta/VimKit", from: .init(0, 4, 2))
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "VimAssistant"),
+            name: "VimAssistant",
+            dependencies: ["VimKit"],
+            linkerSettings: [
+                .linkedFramework("AVFoundation"),
+                .linkedFramework("Speech")
+            ]
+        ),
         .testTarget(
             name: "VimAssistantTests",
             dependencies: ["VimAssistant"]
