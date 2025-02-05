@@ -10,13 +10,19 @@ import VimKit
 
 public struct VimAssistantView: View {
 
+    var vim: Vim
+
     @State
-    var inputText: String = ""
+    var speechRecognizer = SpeechRecognizer()
+
+    @State
+    var inputText: String = .empty
 
     /// Initializer.
     /// - Parameter enabled: flag indicating if the assistant should be enabled or not
-    init?(_ enabled: Bool = false) {
+    init?(vim: Vim, _ enabled: Bool = false) {
         if !enabled { return nil }
+        self.vim = vim
     }
 
     public var body: some View {
@@ -53,5 +59,5 @@ public struct VimAssistantView: View {
 }
 
 #Preview {
-    VimAssistantView(true)
+    VimAssistantView(vim: .init(), true)
 }
