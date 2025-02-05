@@ -18,6 +18,13 @@ public struct VimAssistantView: View {
     @State
     var inputText: String = .empty
 
+    private var gradient = Gradient(
+        colors: [
+            Color(.teal),
+            Color(.purple)
+        ]
+    )
+
     /// Initializer.
     /// - Parameter enabled: flag indicating if the assistant should be enabled or not
     public init?(vim: Vim, _ enabled: Bool = false) {
@@ -27,8 +34,9 @@ public struct VimAssistantView: View {
 
     public var body: some View {
 
-        HStack {
+        HStack(spacing: 4) {
             Image(systemName: "apple.intelligence")
+                .padding()
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(
                     .angularGradient(
@@ -37,14 +45,28 @@ public struct VimAssistantView: View {
                     )
                 )
 
-            TextField(text: $inputText, prompt: Text("Type here to use the assistant.")) {
-                Image(systemName: "microphone")
+                TextField(text: $inputText, prompt: Text("Type or tap microphone to use the AI assistant.")) {
+                    Image(systemName: "microphone")
+                }
+                .textFieldStyle(.plain)
 
-            }
-            .textFieldStyle(.plain)
             microPhoneButton
+                .padding()
         }
-        .padding()
+        .background(Color.black.opacity(0.65))
+        .cornerRadius(8)
+        .overlay{
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(
+                    LinearGradient(
+                        gradient: gradient,
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    lineWidth: 4
+                )
+        }
+        .padding(24)
     }
 
     var microPhoneButton: some View {
