@@ -7,4 +7,4 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](https://opensource.org/licenses/MIT)
 
 # VimAssistant
-VimAssistant is a AI powered productity assistant to VimKit that helps users complete tasks more efficiently.
+VimAssistant is a AI powered productivity assistant to VimKit that helps users complete tasks more efficiently.
