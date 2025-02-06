@@ -10,6 +10,9 @@ import Foundation
 import Speech
 import SwiftUI
 
+private let bus: AVAudioNodeBus = 0
+private let bufferSize: AVAudioFrameCount = 1024
+
 public actor SpeechRecognizer: ObservableObject {
 
     enum RecognizerError: Error {
@@ -30,8 +33,21 @@ public actor SpeechRecognizer: ObservableObject {
         }
     }
 
+    /// The speech recognition transcript result.
     @MainActor
     public var transcript: String = .empty
+
+    @MainActor
+    public var run: Bool = false {
+        didSet {
+            if run {
+                resetTranscript()
+                startTranscribing()
+            } else {
+                stopTranscribing()
+            }
+        }
+    }
 
     private var audioEngine: AVAudioEngine?
     private var request: SFSpeechAudioBufferRecognitionRequest?
@@ -92,13 +108,18 @@ public actor SpeechRecognizer: ObservableObject {
         }
     }
 
+    /// Handles speech recognition results.
+    /// - Parameters:
+    ///   - audioEngine: the audio engine that processed the task
+    ///   - result: the speech recognition result
+    ///   - error: errors that could have occurred during recognition
     nonisolated private func recognitionHandler(audioEngine: AVAudioEngine, result: SFSpeechRecognitionResult?, error: Error?) {
         let receivedFinalResult = result?.isFinal ?? false
         let receivedError = error != nil
 
         if receivedFinalResult || receivedError {
             audioEngine.stop()
-            audioEngine.inputNode.removeTap(onBus: 0)
+            audioEngine.inputNode.removeTap(onBus: bus)
         }
 
         if let result {
@@ -130,12 +151,14 @@ public actor SpeechRecognizer: ObservableObject {
         #endif
 
         let inputNode = audioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: bus)
+        let inputFormat = inputNode.inputFormat(forBus: bus)
 
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
+        inputNode.installTap(onBus: bus, bufferSize: bufferSize, format: recordingFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
             request.append(buffer)
         }
         audioEngine.prepare()
+
         try audioEngine.start()
 
         return (audioEngine, request)
