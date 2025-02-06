@@ -10,6 +10,9 @@ import Foundation
 import Speech
 import SwiftUI
 
+private let bus: AVAudioNodeBus = 0
+private let bufferSize: AVAudioFrameCount = 1024
+
 public actor SpeechRecognizer: ObservableObject {
 
     enum RecognizerError: Error {
@@ -32,6 +35,18 @@ public actor SpeechRecognizer: ObservableObject {
 
     @MainActor
     public var transcript: String = .empty
+
+    @MainActor
+    public var run: Bool = false {
+        didSet {
+            if run {
+                resetTranscript()
+                startTranscribing()
+            } else {
+                stopTranscribing()
+            }
+        }
+    }
 
     private var audioEngine: AVAudioEngine?
     private var request: SFSpeechAudioBufferRecognitionRequest?
@@ -98,7 +113,7 @@ public actor SpeechRecognizer: ObservableObject {
 
         if receivedFinalResult || receivedError {
             audioEngine.stop()
-            audioEngine.inputNode.removeTap(onBus: 0)
+            audioEngine.inputNode.removeTap(onBus: bus)
         }
 
         if let result {
@@ -130,12 +145,14 @@ public actor SpeechRecognizer: ObservableObject {
         #endif
 
         let inputNode = audioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: bus)
+        let inputFormat = inputNode.inputFormat(forBus: bus)
 
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
+        inputNode.installTap(onBus: bus, bufferSize: bufferSize, format: recordingFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
             request.append(buffer)
         }
         audioEngine.prepare()
+
         try audioEngine.start()
 
         return (audioEngine, request)

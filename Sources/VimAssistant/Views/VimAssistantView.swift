@@ -18,12 +18,16 @@ public struct VimAssistantView: View {
     @State
     var inputText: String = .empty
 
-    private var gradient = Gradient(
-        colors: [
-            Color(.teal),
-            Color(.purple)
-        ]
-    )
+    @State
+    private var animateGradient = false
+
+    private var animation: Animation {
+        if animateGradient {
+            .easeOut(duration: 2).repeatForever()
+        } else {
+            .easeOut(duration: 2)
+        }
+    }
 
     /// Initializer.
     /// - Parameter enabled: flag indicating if the assistant should be enabled or not
@@ -33,8 +37,15 @@ public struct VimAssistantView: View {
     }
 
     public var body: some View {
+        VStack {
+            inputView
+            responseView
+        }
+    }
 
-        HStack(spacing: 4) {
+    var inputView: some View {
+
+        HStack {
             Image(systemName: "apple.intelligence")
                 .padding()
                 .symbolRenderingMode(.palette)
@@ -45,38 +56,92 @@ public struct VimAssistantView: View {
                     )
                 )
 
-                TextField(text: $inputText, prompt: Text("Type or tap microphone to use the AI assistant.")) {
-                    Image(systemName: "microphone")
-                }
+            TextField(text: $inputText, prompt: Text("Type or tap microphone to use the AI assistant.")) {
+                Image(systemName: "microphone")
+            }
                 .textFieldStyle(.plain)
 
-            microPhoneButton
+            microphoneButton
                 .padding()
         }
         .background(Color.black.opacity(0.65))
         .cornerRadius(8)
-        .overlay{
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(
-                    LinearGradient(
-                        gradient: gradient,
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
-                    lineWidth: 4
-                )
+        .overlay {
+            overlayView
         }
-        .padding(24)
+        .padding()
     }
 
-    var microPhoneButton: some View {
-        Button(action: {
 
+    // The stroke gradient
+    private var gradient: Gradient {
+        .init(colors: animateGradient ? [.red, .orange] : [.teal, .purple])
+    }
+
+    // The gradient style
+    private var gradientStyle: some ShapeStyle {
+        LinearGradient(
+            gradient: gradient,
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+
+    // The overlay view of the text box that animates the stroke
+    private var overlayView: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .stroke(gradientStyle, lineWidth: 4)
+            .hueRotation(.degrees(animateGradient ? 45 : 0))
+            .animation(animation, value: animateGradient)
+    }
+
+    private var microphoneButton: some View {
+        Button(action: {
+            animateGradient.toggle()
+            speechRecognizer.run.toggle()
         }) {
             Image(systemName: "microphone")
         }
         .buttonStyle(.plain)
+    }
 
+    var responseView: some View {
+
+        VStack(spacing: 4) {
+            if speechRecognizer.transcript.isNotEmpty {
+                HStack {
+                    Text(speechRecognizer.transcript)
+                        .font(.title2)
+                    Spacer()
+                }
+                .padding(.leading)
+
+                HStack {
+                    goodResponseButton
+                    badResponseButton
+                    Spacer()
+                }
+                .padding([.leading])
+            }
+        }
+        .padding(.bottom)
+
+    }
+
+    var goodResponseButton: some View {
+        Button(action: {
+            // TODO: Report a good response
+        }) {
+            Image(systemName: "hand.thumbsup")
+        }
+    }
+
+    var badResponseButton: some View {
+        Button(action: {
+            // TODO: Report a bad response
+        }) {
+            Image(systemName: "hand.thumbsdown")
+        }
     }
 }
 
