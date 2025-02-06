@@ -21,6 +21,10 @@ public struct VimAssistantView: View {
     @State
     private var animateGradient = false
 
+    private var displayResponse: Bool {
+        speechRecognizer.transcript.isNotEmpty
+    }
+
     private var animation: Animation {
         if animateGradient {
             .easeOut(duration: 2).repeatForever()
@@ -55,6 +59,7 @@ public struct VimAssistantView: View {
                         center: .center, startAngle: .zero, endAngle: .degrees(360)
                     )
                 )
+                .font(.title)
 
             TextField(text: $inputText, prompt: Text("Type or tap microphone to use the AI assistant.")) {
                 Image(systemName: "microphone")
@@ -69,7 +74,7 @@ public struct VimAssistantView: View {
         .overlay {
             overlayView
         }
-        .padding()
+        .padding([.leading, .top, .trailing])
     }
 
 
@@ -101,6 +106,7 @@ public struct VimAssistantView: View {
             speechRecognizer.run.toggle()
         }) {
             Image(systemName: "microphone")
+                .font(.title)
         }
         .buttonStyle(.plain)
     }
@@ -108,23 +114,22 @@ public struct VimAssistantView: View {
     var responseView: some View {
 
         VStack(spacing: 4) {
-            if speechRecognizer.transcript.isNotEmpty {
-                HStack {
-                    Text(speechRecognizer.transcript)
+            if displayResponse {
+                Text(speechRecognizer.transcript)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                         .font(.title2)
-                    Spacer()
-                }
-                .padding(.leading)
-
+                        .padding()
                 HStack {
+                    Spacer()
                     goodResponseButton
                     badResponseButton
-                    Spacer()
                 }
-                .padding([.leading])
+                .padding([.bottom, .trailing])
             }
         }
-        .padding(.bottom)
+        .background(Color.black.opacity(0.65))
+        .cornerRadius(8)
+        .padding([.leading, .bottom, .trailing])
 
     }
 
@@ -133,6 +138,7 @@ public struct VimAssistantView: View {
             // TODO: Report a good response
         }) {
             Image(systemName: "hand.thumbsup")
+                .buttonStyle(.plain)
         }
     }
 
