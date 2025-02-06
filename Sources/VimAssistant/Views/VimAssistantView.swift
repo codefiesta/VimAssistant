@@ -96,7 +96,7 @@ public struct VimAssistantView: View {
     private var overlayView: some View {
         RoundedRectangle(cornerRadius: 8)
             .stroke(gradientStyle, lineWidth: 4)
-            .hueRotation(.degrees(animateGradient ? 45 : 0))
+            .hueRotation(.degrees(animateGradient ? 90 : 0))
             .animation(animation, value: animateGradient)
     }
 

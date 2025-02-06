@@ -33,6 +33,7 @@ public actor SpeechRecognizer: ObservableObject {
         }
     }
 
+    /// The speech recognition transcript result.
     @MainActor
     public var transcript: String = .empty
 
@@ -107,6 +108,11 @@ public actor SpeechRecognizer: ObservableObject {
         }
     }
 
+    /// Handles speech recognition results.
+    /// - Parameters:
+    ///   - audioEngine: the audio engine that processed the task
+    ///   - result: the speech recognition result
+    ///   - error: errors that could have occurred during recognition
     nonisolated private func recognitionHandler(audioEngine: AVAudioEngine, result: SFSpeechRecognitionResult?, error: Error?) {
         let receivedFinalResult = result?.isFinal ?? false
         let receivedError = error != nil
