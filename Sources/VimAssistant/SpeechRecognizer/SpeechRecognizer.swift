@@ -151,10 +151,9 @@ public actor SpeechRecognizer: ObservableObject {
         #endif
 
         let inputNode = audioEngine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: bus)
-        let inputFormat = inputNode.inputFormat(forBus: bus)
+        let outputFormat = inputNode.outputFormat(forBus: bus)
 
-        inputNode.installTap(onBus: bus, bufferSize: bufferSize, format: recordingFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
+        inputNode.installTap(onBus: bus, bufferSize: bufferSize, format: outputFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
             request.append(buffer)
         }
         audioEngine.prepare()

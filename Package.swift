@@ -17,7 +17,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/codefiesta/VimKit", from: .init(0, 4, 2))
+        .package(url: "https://github.com/codefiesta/VimKit", from: .init(0, 4, 3))
     ],
     targets: [
         .target(
@@ -25,6 +25,8 @@ let package = Package(
             dependencies: ["VimKit"],
             linkerSettings: [
                 .linkedFramework("AVFoundation"),
+                .linkedFramework("CoreML"),
+                .linkedFramework("NaturalLanguage"),
                 .linkedFramework("Speech")
             ]
         ),
