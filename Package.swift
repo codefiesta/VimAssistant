@@ -17,14 +17,17 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/codefiesta/VimKit", from: .init(0, 4, 2))
+        .package(url: "https://github.com/codefiesta/VimKit", from: .init(0, 4, 3))
     ],
     targets: [
         .target(
             name: "VimAssistant",
             dependencies: ["VimKit"],
+            resources: [.process("Resources/")],
             linkerSettings: [
                 .linkedFramework("AVFoundation"),
+                .linkedFramework("CoreML"),
+                .linkedFramework("NaturalLanguage"),
                 .linkedFramework("Speech")
             ]
         ),
