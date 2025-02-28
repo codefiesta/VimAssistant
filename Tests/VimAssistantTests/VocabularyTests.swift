@@ -1,7 +1,16 @@
+//
+//  VocabularyTests.swift
+//  VimAssistant
+//
+//  Created by Kevin McKee
+//
+
 import Testing
 @testable import VimAssistant
 
-@Test func vocabularyTest() async throws {
+@Test("Check vocabulary data",
+      .tags(.vocabulary))
+func vocabularyTest() async throws {
 
     let vocabulary = Vocabulary.shared
     #expect(vocabulary.padding == 0)
