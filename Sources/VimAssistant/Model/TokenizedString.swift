@@ -15,8 +15,16 @@ struct TokenizedString {
     /// Use Natural Language's NLTagger to tokenize the input by word.
     private let tagger: NLTagger = .init(tagSchemes: [.tokenType])
 
+    /// The vocabulary.
+    private let vocabulary: Vocabulary = .shared
+
+    /// The raw untokenized string value.
     private let rawValue: String
+
+    /// The array of tokens
     public private(set) var tokens: [Substring] = .init()
+
+    /// The array of token IDs
     public private(set) var tokenIDs: [Int] = .init()
 
     /// Common Initializer
@@ -73,7 +81,7 @@ struct TokenizedString {
             // Note when we've found the root word.
             var foundFirstSubtoken = false
 
-            while !subToken.isEmpty {
+            while subToken.isNotEmpty {
 
                 // Word suffixes begin with ## in the vocabulary, such as `##ing`.
                 let prefix = foundFirstSubtoken ? defaultPrefix : ""
@@ -81,12 +89,44 @@ struct TokenizedString {
                 // Convert the string to lowercase to match the vocabulary.
                 let searchTerm = Substring(prefix + subToken).lowercased()
 
-                let subTokenID = Vocabulary.tokenID(for: searchTerm)
+                let subTokenID = vocabulary.tokenID(for: searchTerm)
 
-                if subTokenID == Vocabulary.unknown {
+                if subTokenID == vocabulary.unknown {
+                    // Remove the last character and try again.
+                    let nextSubtoken = subToken.dropLast()
 
+                    if nextSubtoken.isEmpty {
+
+                        // This token and its components are not in the vocabulary.
+                        subTokens = [token]
+                        subTokenIDs = [vocabulary.unknown]
+
+                        // Exit the while-loop, but continue the for-loop.
+                        break
+                    }
+
+                    // Prepare for the next iteration of the while-loop.
+                    subToken = nextSubtoken
+
+                } else {
+
+                    // Note that this loop has found the first subtoken.
+                    // Ok to set true for additional subtokens.
+                    foundFirstSubtoken = true
+
+                    // Save this wordpiece and its ID.
+                    subTokens.append(subToken)
+                    subTokenIDs.append(subTokenID)
+
+                    // Repeat search with the token's remainder, if any.
+                    subToken = token.suffix(from: subToken.endIndex)
                 }
             }
+
+            // Append all of this token's sub-tokens and their IDs.
+            wordpieceTokens += subTokens
+            wordpieceTokenIDs += subTokenIDs
+
         }
 
         guard wordpieceTokens.count == wordpieceTokenIDs.count else {
