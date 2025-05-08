@@ -59,6 +59,10 @@ public struct VimPrediction: Decodable {
     var actions: [Action: Float] = .init()
     var entities: [LabeledEntity] = .init()
 
+    var bestPrediction: (action: Action, confidence: Float)? {
+        actions.sorted{ $0.value > $1.value }.first.map{ ($0.key, $0.value)}
+    }
+
     /// Provides a convenience list of tuples that contains
     /// the index of a known entity and it's range or -1 for unkown.
     var ranges: [(index: Int, range: Range<Int>)] = .init()

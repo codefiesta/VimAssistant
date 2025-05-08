@@ -14,9 +14,13 @@ struct VimPredictionView: View {
     var text: String { prediction.text }
 
     var body: some View {
-        annotatedText
-            .frame(alignment: .leading)
+        VStack(spacing: 0) {
+            annotatedText
                 .padding()
+            bestPredictionView
+                .frame(alignment: .leading)
+                .padding([.bottom])
+        }
     }
 
     var annotatedText: some View {
@@ -25,11 +29,20 @@ struct VimPredictionView: View {
                 if item.index == .empty {
                     Text(text[item.range])
                 } else {
-                    Text(text[item.range])
+                    Text(text[item.range] + " " + prediction.entities[item.index].label)
                     .padding(6)
                     .background(Color.purple.opacity(0.65))
                     .cornerRadius(8)
                 }
+            }
+        }
+    }
+
+    var bestPredictionView: some View {
+        HStack {
+            if let bestPrediction = prediction.bestPrediction {
+                Text(bestPrediction.action.rawValue.lowercased())
+                Text(bestPrediction.confidence.formatted())
             }
         }
     }
