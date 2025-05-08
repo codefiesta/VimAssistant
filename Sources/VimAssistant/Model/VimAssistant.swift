@@ -88,6 +88,7 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
         task?.cancel()
     }
 
+    /// Completes the last natural language prediction task and restarts the task.
     func complete() {
         stop()
         start()
