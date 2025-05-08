@@ -13,29 +13,40 @@ struct VimPredictionView: View {
 
     var text: String { prediction.text }
 
+    var colors: [Color] = [
+        .red, .orange, .teal, .purple, .blue, .green,
+    ]
+
+    @State
+    var isDisclosed: Bool = false
+
     var body: some View {
-        VStack(spacing: 0) {
-            annotatedText
-                .padding()
-            bestPredictionView
-                .frame(alignment: .leading)
-                .padding([.bottom])
+        VStack(alignment: .leading) {
+            Text(attributedString)
+            explanationView
+                .frame(height: isDisclosed ? nil : 0, alignment: .top)
+                .clipped()
         }
+        .padding()
+        .environment(\.openURL, OpenURLAction { url in
+            withAnimation {
+                isDisclosed.toggle()
+            }
+            return .discarded
+        })
     }
 
-    var annotatedText: some View {
-        HStack(spacing: 0) {
-            ForEach(prediction.ranges, id: \.1) { item in
-                if item.index == .empty {
-                    Text(text[item.range])
-                } else {
-                    Text(text[item.range] + " " + prediction.entities[item.index].label)
-                    .padding(6)
-                    .background(Color.purple.opacity(0.65))
-                    .cornerRadius(8)
-                }
-            }
+    var attributedString: AttributedString {
+        var result = AttributedString(text)
+        for entity in prediction.entities {
+            let entityText = text[entity.range]
+            var attributedEntityString = AttributedString(entityText)
+            attributedEntityString.foregroundColor = .orange
+            attributedEntityString.underlineStyle = .single
+            attributedEntityString.link = URL(string: "/\(entity.label)/\(entity.value)")!
+            result.replaceSubrange(bounds: entity.range, with: attributedEntityString)
         }
+        return result
     }
 
     var bestPredictionView: some View {
@@ -45,6 +56,42 @@ struct VimPredictionView: View {
                 Text(bestPrediction.confidence.formatted())
             }
         }
+    }
+
+    var explanationView: some View {
+        VStack(alignment: .leading) {
+            Text("Explanation of results")
+                .font(.headline)
+            Divider()
+                .fixedSize()
+
+            Text("Recognized entities:")
+                .font(.subheadline).bold()
+            ForEach(prediction.entities) { entity in
+                HStack {
+                    Text(text[entity.range])
+                        .bold()
+                    Text(entity.label)
+                        .padding(2)
+                        .background(Color.orange)
+                        .cornerRadius(4)
+                }
+            }
+            if let bestPrediction = prediction.bestPrediction {
+                Divider()
+                    .fixedSize()
+                Text("Best prediction action:")
+                    .font(.subheadline)
+                    .bold()
+                HStack {
+                    Text(bestPrediction.action.rawValue.lowercased())
+                        .bold()
+                    Text(bestPrediction.confidence.formatted(.percent))
+                }
+            }
+
+        }
+        .padding([.top])
     }
 }
 

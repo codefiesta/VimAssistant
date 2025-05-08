@@ -15,6 +15,9 @@ public struct VimAssistantView: View {
     @State
     var assistant: VimAssistant = .init()
 
+    /// The handler to pass prediction information to.
+    var handler: VimAssistant.Handler = .init()
+
     @State
     var inputText: String = .empty
 
@@ -39,7 +42,10 @@ public struct VimAssistantView: View {
     public var body: some View {
         VStack {
             inputView
-            responseView
+            predictionView
+        }
+        .onChange(of: assistant.prediction) { _, prediction in
+            handler.handle(vim: vim, prediction: prediction)
         }
     }
 
@@ -107,23 +113,17 @@ public struct VimAssistantView: View {
         .buttonStyle(.plain)
     }
 
-    var responseView: some View {
-        VStack(spacing: 4) {
-
-            if let result = assistant.prediction {
-                switch result {
-                case .success(let prediction):
-                    VimPredictionView(prediction: prediction)
-                    HStack {
-                        Spacer()
-                        goodResponseButton
-                        badResponseButton
-                    }
-                    .padding([.bottom, .trailing])
-
-                case .failure(_):
-                    EmptyView()
+    var predictionView: some View {
+        VStack(alignment: .leading) {
+            if let prediction = assistant.prediction {
+                VimPredictionView(prediction: prediction)
+                HStack {
+                    Spacer()
+                    goodResponseButton
+                    badResponseButton
                 }
+                .padding([.bottom, .trailing])
+
             }
         }
         .background(Color.black.opacity(0.65))

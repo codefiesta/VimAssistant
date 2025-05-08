@@ -14,11 +14,18 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
     private let decoder: JSONDecoder = .init()
     private let speechRecognizer: SpeechRecognizer = .init()
 
+    private var dueTime: TimeInterval = 0.8
+    private var cancellables: Set<AnyCancellable> = .init()
+
     /// Speech Recognizer task.
     private var task: Task<Void, Error>?
 
     @MainActor
-    public var prediction: Result<VimPrediction, Error>?
+    public var prediction: VimPrediction?
+
+    /// Holds the latest text to process.
+    @Published
+    var text: String = .empty
 
     @MainActor
     public var listen: Bool = false {
@@ -32,7 +39,22 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
     }
 
     /// Public initializer.
-    public init() { }
+    public init() {
+        /// Debounce the text so we can limit rapid successive events from the speech recognizer.
+        $text
+            .removeDuplicates()
+            .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] value in
+                guard let self else { return }
+                Task {
+                    guard let receivedPrediction = await process(text: value) else { return }
+                    Task { @MainActor in
+                        prediction = receivedPrediction
+                    }
+                }
+            })
+            .store(in: &cancellables)
+    }
 
     /// Starts the speech recogntion task to being processing ML predictions.
     func start() {
@@ -43,13 +65,12 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
             do {
                 let stream = await speechRecognizer.stream()
 
-                for try await text in stream {
-                    guard text.isNotEmpty else { continue }
-                    Task {
-                        guard let processedResult = await process(text: text) else { return }
-                        Task { @MainActor in
-                            prediction = .success(processedResult)
-                        }
+                for try await transciption in stream {
+                    guard transciption.isNotEmpty else { continue }
+                    text = transciption
+
+                    Task { @MainActor in
+                        prediction = .init(text: transciption)
                     }
                 }
             } catch {
