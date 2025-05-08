@@ -23,7 +23,6 @@ let package = Package(
         .target(
             name: "VimAssistant",
             dependencies: ["VimKit"],
-            resources: [.process("Resources/")],
             linkerSettings: [
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("CoreML"),

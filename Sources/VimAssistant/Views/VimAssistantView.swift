@@ -1,8 +1,8 @@
 //
-//  SwiftUIView.swift
+//  VimAssistantView.swift
 //  VimAssistant
 //
-//  Created by Kevin McKee on 2/5/25.
+//  Created by Kevin McKee
 //
 
 import SwiftUI
@@ -13,17 +13,13 @@ public struct VimAssistantView: View {
     var vim: Vim
 
     @State
-    var speechRecognizer = SpeechRecognizer()
+    var assistant: VimAssistant = .init()
 
     @State
     var inputText: String = .empty
 
     @State
     private var animateGradient = false
-
-    private var displayResponse: Bool {
-        speechRecognizer.transcript.isNotEmpty
-    }
 
     private var animation: Animation {
         if animateGradient {
@@ -103,7 +99,7 @@ public struct VimAssistantView: View {
     private var microphoneButton: some View {
         Button(action: {
             animateGradient.toggle()
-            speechRecognizer.run.toggle()
+            assistant.listen.toggle()
         }) {
             Image(systemName: "microphone")
                 .font(.title)
@@ -112,25 +108,27 @@ public struct VimAssistantView: View {
     }
 
     var responseView: some View {
-
         VStack(spacing: 4) {
-            if displayResponse {
-                Text(speechRecognizer.transcript)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                        .font(.title2)
-                        .padding()
-                HStack {
-                    Spacer()
-                    goodResponseButton
-                    badResponseButton
+
+            if let result = assistant.prediction {
+                switch result {
+                case .success(let prediction):
+                    VimPredictionView(prediction: prediction)
+                    HStack {
+                        Spacer()
+                        goodResponseButton
+                        badResponseButton
+                    }
+                    .padding([.bottom, .trailing])
+
+                case .failure(_):
+                    EmptyView()
                 }
-                .padding([.bottom, .trailing])
             }
         }
         .background(Color.black.opacity(0.65))
         .cornerRadius(8)
         .padding([.leading, .bottom, .trailing])
-
     }
 
     var goodResponseButton: some View {
