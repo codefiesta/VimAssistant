@@ -13,24 +13,54 @@ struct VimPredictionView: View {
 
     var text: String { prediction.text }
 
-    var colors: [Color] = [
-        .red, .orange, .teal, .purple, .blue, .green,
-    ]
+    /// Returns the colors for their corresponding range
+    private var confidenceColors: [Color] {
+        [
+            .red,
+            .orange,
+            .yellow,
+            .green
+        ]
+    }
 
-    @State
-    var isDisclosed: Bool = false
+    /// Returns the ranges of culling percengtages.
+    private var confidenceRanges: [Range<Float>] {
+        [
+            0.0..<0.85,
+            0.85..<0.9,
+            0.9..<0.95,
+            0.95..<1.01
+        ]
+    }
+
+    /// Returns the prediction confidence color.
+    var predictionConfidenceColor: Color {
+        guard let bestPrediction = prediction.bestPrediction else {
+            return .primary
+        }
+        for (i, range) in confidenceRanges.enumerated() {
+            if range.contains(bestPrediction.confidence) {
+                return confidenceColors[i]
+            }
+        }
+        return .primary
+    }
+
+
+    @Binding
+    var explain: Bool
 
     var body: some View {
         VStack(alignment: .leading) {
             Text(attributedString)
             explanationView
-                .frame(height: isDisclosed ? nil : 0, alignment: .top)
+                .frame(height: explain ? nil : 0, alignment: .top)
                 .clipped()
         }
         .padding()
         .environment(\.openURL, OpenURLAction { url in
             withAnimation {
-                isDisclosed.toggle()
+                explain.toggle()
             }
             return .discarded
         })
@@ -87,6 +117,7 @@ struct VimPredictionView: View {
                     Text(bestPrediction.action.rawValue.lowercased())
                         .bold()
                     Text(bestPrediction.confidence.formatted(.percent))
+                        .foregroundStyle(predictionConfidenceColor)
                 }
             }
 
@@ -99,5 +130,5 @@ struct VimPredictionView: View {
 
     let json = "{\"text\":\"Hide all walls and air terminals \",\"ents\":[{\"start\":9,\"end\":14,\"label\":\"CON-BIM-CATG\"},{\"start\":19,\"end\":32,\"label\":\"CON-BIM-CATG\"}],\"cats\":{\"ISOLATE\":0.0122569752857089,\"HIDE\":0.978784739971161,\"QUANTIFY\":0.00895828753709793}}"
     let prediction = try! JSONDecoder().decode(VimPrediction.self, from: json.data(using: .utf8)!)
-    VimPredictionView(prediction: prediction)
+    VimPredictionView(prediction: prediction, explain: .constant(false))
 }

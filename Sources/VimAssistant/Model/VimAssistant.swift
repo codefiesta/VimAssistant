@@ -14,7 +14,8 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
     private let decoder: JSONDecoder = .init()
     private let speechRecognizer: SpeechRecognizer = .init()
 
-    private var dueTime: TimeInterval = 0.8
+    private let scheduler: DispatchQueue = .init(label: "ai.assistant")
+    private let dueTime: TimeInterval = 0.8
     private var cancellables: Set<AnyCancellable> = .init()
 
     /// Speech Recognizer task.
@@ -43,7 +44,7 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
         /// Debounce the text so we can limit rapid successive events from the speech recognizer.
         $text
             .removeDuplicates()
-            .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
+            .debounce(for: .seconds(dueTime), scheduler: scheduler)
             .sink(receiveValue: { [weak self] value in
                 guard let self else { return }
                 Task {
@@ -59,7 +60,7 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
     /// Starts the speech recogntion task to being processing ML predictions.
     func start() {
 
-        if let task { task.cancel() }
+        task?.cancel()
 
         task = Task {
             do {
@@ -85,6 +86,11 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
             prediction = nil
         }
         task?.cancel()
+    }
+
+    func complete() {
+        stop()
+        start()
     }
 
     /// Sends a prediction request to a network addressable model which can be used when the network is available.

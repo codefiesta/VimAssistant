@@ -22,6 +22,9 @@ public struct VimAssistantView: View {
     var inputText: String = .empty
 
     @State
+    var explain: Bool = false
+
+    @State
     private var animateGradient = false
 
     private var animation: Animation {
@@ -116,13 +119,14 @@ public struct VimAssistantView: View {
     var predictionView: some View {
         VStack(alignment: .leading) {
             if let prediction = assistant.prediction {
-                VimPredictionView(prediction: prediction)
+                VimPredictionView(prediction: prediction, explain: $explain)
                 HStack {
+                    explainButton
                     Spacer()
                     goodResponseButton
                     badResponseButton
                 }
-                .padding([.bottom, .trailing])
+                .padding([.leading, .bottom, .trailing])
 
             }
         }
@@ -131,9 +135,20 @@ public struct VimAssistantView: View {
         .padding([.leading, .bottom, .trailing])
     }
 
+    var explainButton: some View {
+        Button(action: {
+            withAnimation {
+                explain.toggle()
+            }
+        }) {
+            Image(systemName: "info.circle")
+                .buttonStyle(.plain)
+        }
+    }
+
     var goodResponseButton: some View {
         Button(action: {
-            // TODO: Report a good response
+            assistant.complete()
         }) {
             Image(systemName: "hand.thumbsup")
                 .buttonStyle(.plain)
@@ -142,7 +157,7 @@ public struct VimAssistantView: View {
 
     var badResponseButton: some View {
         Button(action: {
-            // TODO: Report a bad response
+            assistant.complete()
         }) {
             Image(systemName: "hand.thumbsdown")
         }
