@@ -8,6 +8,7 @@
 
 # VimAssistant
 VimAssistant is a AI powered productivity assistant to [VimKit](https://github.com/codefiesta/VimKit) that helps users complete tasks more efficiently.
+<img width="590" alt="assistant" src="https://github.com/user-attachments/assets/ae438be8-b39c-435d-be0c-365443f4fe4e" />
 
 ## Overview
 The VimAssistant package processes natural language (spoken or typed) to take action on a VIM model.
