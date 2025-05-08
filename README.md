@@ -38,7 +38,7 @@ The base model was created with the OntoNotes 5.0 NER annotations which includes
 * **NORP**: National/religious/political group (e.g., Democrats).
 * **CARDINAL**: Cardinal numbers (e.g., 1, 2, 3).
 
-The trained model provides provided Construction NER annotations:
+The trained model provides Construction NER annotations:
 
 * **CON-BIM-CATG**: BIM Category - a high-level classification for families and elements, grouping them based on their functional type.
 * **CON-BIM-FAML**: BIM Family - a collection of elements that share common properties, behaviors, and physical characteristics.
