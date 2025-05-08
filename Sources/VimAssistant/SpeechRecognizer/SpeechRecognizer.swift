@@ -8,12 +8,11 @@
 import AVFoundation
 import Foundation
 import Speech
-import SwiftUI
 
 private let bus: AVAudioNodeBus = 0
 private let bufferSize: AVAudioFrameCount = 1024
 
-public actor SpeechRecognizer: ObservableObject {
+public actor SpeechRecognizer {
 
     enum RecognizerError: Error {
 
@@ -33,22 +32,6 @@ public actor SpeechRecognizer: ObservableObject {
         }
     }
 
-    /// The speech recognition transcript result.
-    @MainActor
-    public var transcript: String = .empty
-
-    @MainActor
-    public var run: Bool = false {
-        didSet {
-            if run {
-                resetTranscript()
-                startTranscribing()
-            } else {
-                stopTranscribing()
-            }
-        }
-    }
-
     private var audioEngine: AVAudioEngine?
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
@@ -60,73 +43,6 @@ public actor SpeechRecognizer: ObservableObject {
      */
     init() {
         recognizer = SFSpeechRecognizer()
-    }
-
-    @MainActor
-    public func startTranscribing() {
-        Task {
-            await transcribe()
-        }
-    }
-
-    @MainActor
-    public func resetTranscript() {
-        Task {
-            await reset()
-        }
-    }
-
-    @MainActor
-    public func stopTranscribing() {
-        Task {
-            await reset()
-        }
-    }
-
-    /**
-     Begin transcribing audio.
-     
-     Creates a `SFSpeechRecognitionTask` that transcribes speech to text until you call `stopTranscribing()`.
-     The resulting transcription is continuously written to the published `transcript` property.
-     */
-    private func transcribe() {
-        guard let recognizer, recognizer.isAvailable else {
-            self.transcribe(RecognizerError.unavailable)
-            return
-        }
-
-        do {
-            let (audioEngine, request) = try Self.prepareEngine()
-            self.audioEngine = audioEngine
-            self.request = request
-            self.task = recognizer.recognitionTask(with: request, resultHandler: { [weak self] result, error in
-                self?.recognitionHandler(audioEngine: audioEngine, result: result, error: error)
-            })
-        } catch {
-            self.reset()
-            self.transcribe(error)
-        }
-    }
-
-    /// Handles speech recognition results.
-    /// - Parameters:
-    ///   - audioEngine: the audio engine that processed the task
-    ///   - result: the speech recognition result
-    ///   - error: errors that could have occurred during recognition
-    nonisolated private func recognitionHandler(audioEngine: AVAudioEngine, result: SFSpeechRecognitionResult?, error: Error?) {
-        let receivedFinalResult = result?.isFinal ?? false
-        let receivedError = error != nil
-
-        if receivedFinalResult || receivedError {
-            audioEngine.stop()
-            audioEngine.inputNode.removeTap(onBus: bus)
-        }
-
-        if let result {
-            transcribe(result.bestTranscription.formattedString)
-            // TODO: Hook here to pass transcribed result to LLM/LAM to perform action on VIM file.
-            // Need to decide where the CoreML model actually lives ...
-        }
     }
 
     /// Reset the speech recognizer.
@@ -163,24 +79,51 @@ public actor SpeechRecognizer: ObservableObject {
         return (audioEngine, request)
     }
 
-    nonisolated private func transcribe(_ message: String) {
-        Task { @MainActor in
-            transcript = message
+    /**
+     Begin streaming speech recognition results.
+     */
+    func stream() -> AsyncThrowingStream<String, Error> {
+
+        reset()
+
+        return AsyncThrowingStream<String, Error> { continuation in
+
+            guard let recognizer, recognizer.isAvailable else {
+                continuation.finish(throwing: RecognizerError.unavailable)
+                return
+            }
+
+            do {
+                let (audioEngine, request) = try Self.prepareEngine()
+                self.audioEngine = audioEngine
+                self.request = request
+                self.task = recognizer.recognitionTask(with: request) { result, error in
+
+                    let receivedFinalResult = result?.isFinal ?? false
+                    let receivedError = error != nil
+
+                    if receivedFinalResult || receivedError {
+                        audioEngine.stop()
+                        audioEngine.inputNode.removeTap(onBus: bus)
+                        continuation.finish(throwing: error)
+                    }
+
+                    if let result {
+                        continuation.yield(result.bestTranscription.formattedString)
+                    }
+                }
+            } catch {
+                continuation.finish(throwing: error)
+                self.reset()
+            }
+
+            continuation.onTermination = { _ in
+                Task {
+                    await self.reset()
+                }
+            }
         }
     }
-
-    nonisolated private func transcribe(_ error: Error) {
-        var errorMessage = ""
-        if let error = error as? RecognizerError {
-            errorMessage += error.message
-        } else {
-            errorMessage += error.localizedDescription
-        }
-        Task { @MainActor [errorMessage] in
-            transcript = "<< \(errorMessage) >>"
-        }
-    }
-
 }
 
 extension SFSpeechRecognizer {

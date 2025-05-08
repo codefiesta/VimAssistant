@@ -1,8 +1,8 @@
 //
-//  SwiftUIView.swift
+//  VimAssistantView.swift
 //  VimAssistant
 //
-//  Created by Kevin McKee on 2/5/25.
+//  Created by Kevin McKee
 //
 
 import SwiftUI
@@ -13,17 +13,19 @@ public struct VimAssistantView: View {
     var vim: Vim
 
     @State
-    var speechRecognizer = SpeechRecognizer()
+    var assistant: VimAssistant = .init()
+
+    /// The handler to pass prediction information to.
+    var handler: VimAssistant.Handler = .init()
 
     @State
     var inputText: String = .empty
 
     @State
-    private var animateGradient = false
+    var explain: Bool = false
 
-    private var displayResponse: Bool {
-        speechRecognizer.transcript.isNotEmpty
-    }
+    @State
+    private var animateGradient = false
 
     private var animation: Animation {
         if animateGradient {
@@ -43,7 +45,10 @@ public struct VimAssistantView: View {
     public var body: some View {
         VStack {
             inputView
-            responseView
+            predictionView
+        }
+        .onChange(of: assistant.prediction) { _, prediction in
+            handler.handle(vim: vim, prediction: prediction)
         }
     }
 
@@ -103,7 +108,7 @@ public struct VimAssistantView: View {
     private var microphoneButton: some View {
         Button(action: {
             animateGradient.toggle()
-            speechRecognizer.run.toggle()
+            assistant.listen.toggle()
         }) {
             Image(systemName: "microphone")
                 .font(.title)
@@ -111,31 +116,39 @@ public struct VimAssistantView: View {
         .buttonStyle(.plain)
     }
 
-    var responseView: some View {
-
-        VStack(spacing: 4) {
-            if displayResponse {
-                Text(speechRecognizer.transcript)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                        .font(.title2)
-                        .padding()
+    var predictionView: some View {
+        VStack(alignment: .leading) {
+            if let prediction = assistant.prediction {
+                VimPredictionView(prediction: prediction, explain: $explain)
                 HStack {
+                    explainButton
                     Spacer()
                     goodResponseButton
                     badResponseButton
                 }
-                .padding([.bottom, .trailing])
+                .padding([.leading, .bottom, .trailing])
+
             }
         }
         .background(Color.black.opacity(0.65))
         .cornerRadius(8)
         .padding([.leading, .bottom, .trailing])
+    }
 
+    var explainButton: some View {
+        Button(action: {
+            withAnimation {
+                explain.toggle()
+            }
+        }) {
+            Image(systemName: "info.circle")
+                .buttonStyle(.plain)
+        }
     }
 
     var goodResponseButton: some View {
         Button(action: {
-            // TODO: Report a good response
+            assistant.complete()
         }) {
             Image(systemName: "hand.thumbsup")
                 .buttonStyle(.plain)
@@ -144,7 +157,7 @@ public struct VimAssistantView: View {
 
     var badResponseButton: some View {
         Button(action: {
-            // TODO: Report a bad response
+            assistant.complete()
         }) {
             Image(systemName: "hand.thumbsdown")
         }
