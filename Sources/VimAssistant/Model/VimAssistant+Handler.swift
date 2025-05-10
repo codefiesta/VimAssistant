@@ -19,37 +19,69 @@ public extension VimAssistant {
         ///   - prediction: the prediction
         func handle(vim: Vim, prediction: VimPrediction?) {
             guard let prediction, let bestPrediction = prediction.bestPrediction, bestPrediction.confidence >= 0.85 else { return }
-            guard prediction.entities.isNotEmpty else { return }
-
             let action = bestPrediction.action
-
-            guard let db = vim.db else { return }
-            let modelContext = ModelContext(db.modelContainer)
-
-            var ids: Set<Int> = .init()
-
-            // TODO: This is highly inefficient and needs reworked but predicate disjunction is way effin complicated and frankly stupid.
-            let predicates = buildPredicates(prediction: prediction)
-            let descriptor = FetchDescriptor<Database.Node>(sortBy: [SortDescriptor(\.index)])
-            guard let results = try? modelContext.fetch(descriptor), results.isNotEmpty else { return }
-
-            for predicate in predicates {
-                guard let filtered = try? results.filter(predicate) else { continue }
-                ids.formUnion(filtered.compactMap{ Int($0.index) })
-            }
-
-            guard ids.isNotEmpty else { return }
-
-            Task {
+            let ids = collect(vim: vim, prediction: prediction)
+            Task { @MainActor in
                 switch action {
                 case .hide:
-                    await vim.hide(ids: ids.sorted())
+                    guard ids.isNotEmpty else { return }
+                    await vim.hide(ids: ids)
                 case .isolate:
-                    await vim.isolate(ids: ids.sorted())
+                    guard ids.isNotEmpty else { return }
+                    await vim.isolate(ids: ids)
                 case .quantify:
+                    // TODO: Probably just emit an event that shows the quantities view
                     break
+                case .zoomIn:
+                    await vim.zoom()
+                case .zoomOut:
+                    await vim.zoom(out: true)
+                case .lookLeft:
+                    await vim.look(.left)
+                case .lookRight:
+                    await vim.look(.right)
+                case .lookUp:
+                    await vim.look(.up)
+                case .lookDown:
+                    await vim.look(.down)
+                case .panLeft:
+                    await vim.pan(.left)
+                case .panRight:
+                    await vim.pan(.right)
+                case .panUp:
+                    await vim.pan(.up)
+                case .panDown:
+                    await vim.pan(.down)
                 }
             }
+        }
+
+        private func collect(vim: Vim, prediction: VimPrediction) -> [Int] {
+
+            guard let bestPrediction = prediction.bestPrediction, prediction.entities.isNotEmpty else { return []}
+            let action = bestPrediction.action
+
+            switch action {
+            case .hide, .isolate:
+                guard let db = vim.db else { return [] }
+                let modelContext = ModelContext(db.modelContainer)
+
+                var ids: Set<Int> = .init()
+
+                // TODO: This is highly inefficient and needs reworked but predicate disjunction is way effin complicated and frankly stupid.
+                let predicates = buildPredicates(prediction: prediction)
+                let descriptor = FetchDescriptor<Database.Node>(sortBy: [SortDescriptor(\.index)])
+                guard let results = try? modelContext.fetch(descriptor), results.isNotEmpty else { return [] }
+
+                for predicate in predicates {
+                    guard let filtered = try? results.filter(predicate) else { continue }
+                    ids.formUnion(filtered.compactMap{ Int($0.index) })
+                }
+                return ids.sorted()
+            case .quantify, .zoomIn, .zoomOut, .lookLeft, .lookRight, .lookUp, .lookDown, .panLeft, .panRight, .panUp, .panDown:
+                return []
+            }
+
         }
 
         /// Builds a node predicate that matches on category name.

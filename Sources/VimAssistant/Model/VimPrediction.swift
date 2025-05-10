@@ -30,13 +30,14 @@ public struct VimPrediction: Decodable, Equatable {
         case language = "LANGUAGE"
         case law = "LAW"
         case norp = "NORP"
+        case product = "PRODUCT"
         case cardinal = "CARDINAL"
-        case bimCategory = "CON-BIM-CATG"
-        case bimFamily = "CON-BIM-FAML"
-        case bimType = "CON-BIM-TYPE"
-        case bimInstance = "CON-BIM-INST"
-        case bimLevel = "CON-BIM-LEVL"
-        case bimView = "CON-BIM-VIEW"
+        case bimCategory = "CON_BIM_CATG"
+        case bimFamily = "CON_BIM_FAML"
+        case bimType = "CON_BIM_TYPE"
+        case bimInstance = "CON_BIM_INST"
+        case bimLevel = "CON_BIM_LEVL"
+        case bimView = "CON_BIM_VIEW"
 
         public var id: String {
             rawValue
@@ -47,6 +48,16 @@ public struct VimPrediction: Decodable, Equatable {
         case isolate = "ISOLATE"
         case hide = "HIDE"
         case quantify = "QUANTIFY"
+        case zoomIn = "ZOOM_IN"
+        case zoomOut = "ZOOM_OUT"
+        case lookLeft = "LOOK_LEFT"
+        case lookRight = "LOOK_RIGHT"
+        case lookUp = "LOOK_UP"
+        case lookDown = "LOOK_DOWN"
+        case panLeft = "PAN_LEFT"
+        case panRight = "PAN_RIGHT"
+        case panUp = "PAN_UP"
+        case panDown = "PAN_DOWN"
 
         public var id: String {
             rawValue
