@@ -28,7 +28,7 @@ public extension VimAssistant {
 
             var ids: Set<Int> = .init()
 
-            // TODO: This needs reworked but predicate disjunction is way effin complicated.
+            // TODO: This is highly inefficient and needs reworked but predicate disjunction is way effin complicated and frankly stupid.
             let predicates = buildPredicates(prediction: prediction)
             let descriptor = FetchDescriptor<Database.Node>(sortBy: [SortDescriptor(\.index)])
             guard let results = try? modelContext.fetch(descriptor), results.isNotEmpty else { return }
