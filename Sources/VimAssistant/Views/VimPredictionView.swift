@@ -101,7 +101,7 @@ struct VimPredictionView: View {
                 HStack {
                     Text(text[entity.range])
                         .bold()
-                    Text(entity.label)
+                    Text(entity.label.rawValue)
                         .padding(2)
                         .background(Color.orange)
                         .cornerRadius(4)
@@ -130,5 +130,5 @@ struct VimPredictionView: View {
 
     let json = "{\"text\":\"Hide all walls and air terminals \",\"ents\":[{\"start\":9,\"end\":14,\"label\":\"CON-BIM-CATG\"},{\"start\":19,\"end\":32,\"label\":\"CON-BIM-CATG\"}],\"cats\":{\"ISOLATE\":0.0122569752857089,\"HIDE\":0.978784739971161,\"QUANTIFY\":0.00895828753709793}}"
     let prediction = try! JSONDecoder().decode(VimPrediction.self, from: json.data(using: .utf8)!)
-    VimPredictionView(prediction: prediction, explain: .constant(false))
+    VimPredictionView(prediction: prediction, explain: .constant(true))
 }

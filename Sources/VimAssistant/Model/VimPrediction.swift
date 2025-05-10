@@ -16,6 +16,33 @@ public struct VimPrediction: Decodable, Equatable {
         case tokens = "tokens"
     }
 
+    enum NerLabel: String, Identifiable {
+
+        case person = "PERSON"
+        case organization = "ORGANIZATION"
+        case location = "LOCATION"
+        case date = "DATE"
+        case time = "TIME"
+        case event = "EVENT"
+        case workOfArt = "WORK_OF_ART"
+        case fac = "FAC"
+        case gpe = "GPE"
+        case language = "LANGUAGE"
+        case law = "LAW"
+        case norp = "NORP"
+        case cardinal = "CARDINAL"
+        case bimCategory = "CON-BIM-CATG"
+        case bimFamily = "CON-BIM-FAML"
+        case bimType = "CON-BIM-TYPE"
+        case bimInstance = "CON-BIM-INST"
+        case bimLevel = "CON-BIM-LEVL"
+        case bimView = "CON-BIM-VIEW"
+
+        public var id: String {
+            rawValue
+        }
+    }
+
     enum Action: String, Codable, Identifiable {
         case isolate = "ISOLATE"
         case hide = "HIDE"
@@ -76,17 +103,18 @@ public struct VimPrediction: Decodable, Equatable {
             case end = "end"
         }
 
-        var label: String
+        var label: NerLabel
         var value: String = .empty
         var range: Range<Int>
 
         public var id: String {
-            label + "_\(range)"
+            label.rawValue + "_\(range)"
         }
 
         init(from decoder: Decoder) throws {
             let values = try decoder.container(keyedBy: CodingKeys.self)
-            label = try values.decode(String.self, forKey: .label)
+            let labelString = try values.decode(String.self, forKey: .label)
+            label = .init(rawValue: labelString)!
             let start = try values.decode(Int.self, forKey: .start)
             let end = try values.decode(Int.self, forKey: .end)
             range = start..<end
