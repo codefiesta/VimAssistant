@@ -33,25 +33,25 @@ public extension VimAssistant {
                     // TODO: Probably just emit an event that shows the quantities view
                     break
                 case .zoomIn:
-                    await vim.zoom()
+                    vim.zoom()
                 case .zoomOut:
-                    await vim.zoom(out: true)
+                    vim.zoom(out: true)
                 case .lookLeft:
-                    await vim.look(.left)
+                    vim.look(.left)
                 case .lookRight:
-                    await vim.look(.right)
+                    vim.look(.right)
                 case .lookUp:
-                    await vim.look(.up)
+                    vim.look(.up)
                 case .lookDown:
-                    await vim.look(.down)
+                    vim.look(.down)
                 case .panLeft:
-                    await vim.pan(.left)
+                    vim.pan(.left)
                 case .panRight:
-                    await vim.pan(.right)
+                    vim.pan(.right)
                 case .panUp:
-                    await vim.pan(.up)
+                    vim.pan(.up)
                 case .panDown:
-                    await vim.pan(.down)
+                    vim.pan(.down)
                 }
             }
         }
@@ -63,65 +63,46 @@ public extension VimAssistant {
 
             switch action {
             case .hide, .isolate:
-                guard let db = vim.db else { return [] }
+                guard let db = vim.db, db.nodes.isNotEmpty else { return [] }
                 let modelContext = ModelContext(db.modelContainer)
 
                 var ids: Set<Int> = .init()
 
-                // TODO: This is highly inefficient and needs reworked but predicate disjunction is way effin complicated and frankly stupid.
-                let predicates = buildPredicates(prediction: prediction)
-                let descriptor = FetchDescriptor<Database.Node>(sortBy: [SortDescriptor(\.index)])
+                // Fetch all geometry nodes
+                let nodes = db.nodes
+                let predicate = Database.Node.predicate(nodes: nodes)
+                let descriptor = FetchDescriptor<Database.Node>(predicate: predicate, sortBy: [SortDescriptor(\.index)])
                 guard let results = try? modelContext.fetch(descriptor), results.isNotEmpty else { return [] }
 
-                for predicate in predicates {
-                    guard let filtered = try? results.filter(predicate) else { continue }
-                    ids.formUnion(filtered.compactMap{ Int($0.index) })
+                let categoryNames = prediction.entities.filter{ $0.label == .bimCategory }.map { $0.value }
+                let familyNames = prediction.entities.filter{ $0.label == .bimFamily }.map { $0.value }
+
+                // Tuple of category names and ids
+                let categories = results.compactMap{ $0.element?.category?.name }.uniqued().sorted{ $0 < $1 }.map { name in
+                    (name: name, ids: results.filter{ $0.element?.category?.name == name}.compactMap{ Int($0.index) })
+                }
+
+                // Tuple of family names and ids
+                let familes = results.compactMap{ $0.element?.familyName }.uniqued().sorted{ $0 < $1 }.map { name in
+                    (name: name, ids: results.filter{ $0.element?.familyName == name}.compactMap{ Int($0.index) })
+                }
+
+                // Collect the ids of the matching categories
+                for name in categoryNames {
+                    let found = categories.filter{ name.localizedStandardContains($0.name) }.map{ $0.ids }.reduce([], +)
+                    ids.formUnion(found)
+                }
+
+                // Collect the ids of the matching families
+                for name in familyNames {
+                    let found = familes.filter{ name.localizedStandardContains($0.name) }.map{ $0.ids }.reduce([], +)
+                    ids.formUnion(found)
                 }
                 return ids.sorted()
             case .quantify, .zoomIn, .zoomOut, .lookLeft, .lookRight, .lookUp, .lookDown, .panLeft, .panRight, .panUp, .panDown:
                 return []
             }
 
-        }
-
-        /// Builds a node predicate that matches on category name.
-        /// - Parameter name: the category name to match
-        /// - Returns: a predicate that matches case insensitive category name
-        private func buildCategoryPredicate(_ name: String) -> Predicate<Database.Node> {
-            let predicate = #Predicate<Database.Node> { node in
-                if let element = node.element, let category = element.category {
-                    return category.name.localizedStandardContains(name)
-                } else {
-                    return false
-                }
-            }
-            return predicate
-        }
-
-        /// Builds a node predicate that matches on family name.
-        /// - Parameter name: the family name to match
-        /// - Returns: a predicate that matches case insensitive family name
-        private func buildFamilyPredicate(_ name: String) -> Predicate<Database.Node> {
-            let predicate = #Predicate<Database.Node> { node in
-                if let element = node.element, let familyName = element.familyName {
-                    return familyName.localizedStandardContains(name)
-                } else {
-                    return false
-                }
-            }
-            return predicate
-        }
-
-        /// Builds a list of predicates to query on based on the given prediction.
-        /// - Parameter prediction: the prediction to use
-        /// - Returns: a list of node predicates
-        private func buildPredicates(prediction: VimPrediction) -> [Predicate<Database.Node>] {
-            let categories = prediction.entities.filter{ $0.label == .bimCategory }.map { $0.value }
-            let families = prediction.entities.filter{ $0.label == .bimFamily }.map { $0.value }
-            let categoryPredicates = categories.map { buildCategoryPredicate($0) }
-            let familyPredicates = families.map { buildFamilyPredicate($0) }
-            let predicates = categoryPredicates + familyPredicates
-            return predicates
         }
     }
 }

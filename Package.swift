@@ -17,7 +17,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/codefiesta/VimKit", from: .init(0, 4, 7))
+        .package(url: "https://github.com/codefiesta/VimKit", from: .init(0, 4, 8))
     ],
     targets: [
         .target(
