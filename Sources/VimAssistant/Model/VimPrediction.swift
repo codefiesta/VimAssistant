@@ -16,10 +16,48 @@ public struct VimPrediction: Decodable, Equatable {
         case tokens = "tokens"
     }
 
+    enum NerLabel: String, Identifiable {
+
+        case person = "PERSON"
+        case organization = "ORGANIZATION"
+        case location = "LOCATION"
+        case date = "DATE"
+        case time = "TIME"
+        case event = "EVENT"
+        case workOfArt = "WORK_OF_ART"
+        case fac = "FAC"
+        case gpe = "GPE"
+        case language = "LANGUAGE"
+        case law = "LAW"
+        case norp = "NORP"
+        case product = "PRODUCT"
+        case cardinal = "CARDINAL"
+        case bimCategory = "CON_BIM_CATG"
+        case bimFamily = "CON_BIM_FAML"
+        case bimType = "CON_BIM_TYPE"
+        case bimInstance = "CON_BIM_INST"
+        case bimLevel = "CON_BIM_LEVL"
+        case bimView = "CON_BIM_VIEW"
+
+        public var id: String {
+            rawValue
+        }
+    }
+
     enum Action: String, Codable, Identifiable {
         case isolate = "ISOLATE"
         case hide = "HIDE"
         case quantify = "QUANTIFY"
+        case zoomIn = "ZOOM_IN"
+        case zoomOut = "ZOOM_OUT"
+        case lookLeft = "LOOK_LEFT"
+        case lookRight = "LOOK_RIGHT"
+        case lookUp = "LOOK_UP"
+        case lookDown = "LOOK_DOWN"
+        case panLeft = "PAN_LEFT"
+        case panRight = "PAN_RIGHT"
+        case panUp = "PAN_UP"
+        case panDown = "PAN_DOWN"
 
         public var id: String {
             rawValue
@@ -76,17 +114,18 @@ public struct VimPrediction: Decodable, Equatable {
             case end = "end"
         }
 
-        var label: String
+        var label: NerLabel
         var value: String = .empty
         var range: Range<Int>
 
         public var id: String {
-            label + "_\(range)"
+            label.rawValue + "_\(range)"
         }
 
         init(from decoder: Decoder) throws {
             let values = try decoder.container(keyedBy: CodingKeys.self)
-            label = try values.decode(String.self, forKey: .label)
+            let labelString = try values.decode(String.self, forKey: .label)
+            label = .init(rawValue: labelString)!
             let start = try values.decode(Int.self, forKey: .start)
             let end = try values.decode(Int.self, forKey: .end)
             range = start..<end

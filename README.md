@@ -24,32 +24,36 @@ Some examples of categorized actions include (but not limited to):
 ### Label Scheme
 The base model was created with the OntoNotes 5.0 NER annotations which includes:
 
-* **PERSON**: Individual names (e.g., Barack Obama).
-* **ORGANIZATION**: Company or institution names (e.g., Apple).
-* **LOCATION**: Geographical places (e.g., Tokyo).
+* **CARDINAL**: Cardinal numbers (e.g., 1, 2, 3).
 * **DATE**: Dates (e.g., May 8, 2025).
-* **TIME**: Times (e.g., 10:00 AM).
 * **EVENT**: Names of events (e.g., World Series).
-* **WORK\_OF\_ART**: Names of works of art (e.g., "Hamlet").
 * **FAC**: Buildings or facilities (e.g., White House).
 * **GPE**: Geo-political entities (e.g., United States).
 * **LANGUAGE**: Names of languages (e.g., English).
 * **LAW**: Legal names (e.g., The Constitution).
-* **NORP**: National/religious/political group (e.g., Democrats).
-* **CARDINAL**: Cardinal numbers (e.g., 1, 2, 3).
+* **LOC**: Represents locations (e.g., "New York City").
+* **MONEY**: Indicates monetary values (e.g., "100 dollars").
+* **NORP**: Represents national or political or religious groups (e.g., "Democrats", "the Catholic Church").
+* **ORDINAL**: Denotes ordinal numbers (e.g., "first", "second", "10th").
+* **ORG**: Represents organizations (e.g., "Google", "Microsoft").
+* **PERCENT**: Denotes percentages (e.g., "10%", "20%").
+* **PERSON**: Individual names (e.g., Barack Obama).
+* **PRODUCT**: Represents products (e.g., "iPhone", "MacBook").
+* **QUANTITY**: Indicates measurements or quantities (e.g., "10 kilograms").
+* **TIME**: Times (e.g., 10:00 AM).
+* **WORK\_OF\_ART**: Names of works of art (e.g., "Hamlet").
 
 The trained model provides Construction NER annotations:
 
-* **CON-BIM-CATG**: BIM Category - a high-level classification for families and elements, grouping them based on their functional type.
-* **CON-BIM-FAML**: BIM Family - a collection of elements that share common properties, behaviors, and physical characteristics.
-* **CON-BIM-TYPE**: BIM Type - a specific instantiation of a family that defines a unique set of parameters, essentially a variation within a family. Think of it as a specific size, material, or configuration of a particular family, such as a 3' x 6' door within a door family.
-* **CON-BIM-INST**: BIM Instance - a single, unique occurrence of a family type placed within a model.
-* **CON-BIM-LEVL**: BIM Level - a horizontal  plane used to define the vertical position of elements like walls, floors, and ceilings.
-* **CON-BIM-VIEW**: BIM View - represents a specific way of looking at the model, whether it's a 2D plan, elevation, section, or 3D view.
+* **CON\_BIM\_CATG**: BIM Category - a high-level classification for families and elements, grouping them based on their functional type.
+* **CON\_BIM\_FAML**: BIM Family - a collection of elements that share common properties, behaviors, and physical characteristics.
+* **CON\_BIM\_TYPE**: BIM Type - a specific instantiation of a family that defines a unique set of parameters, essentially a variation within a family. Think of it as a specific size, material, or configuration of a particular family, such as a 3' x 6' door within a door family.
+* **CON\_BIM\_INST**: BIM Instance - a single, unique occurrence of a family type placed within a model.
+* **CON\_BIM\_LEVL**: BIM Level - a horizontal  plane used to define the vertical position of elements like walls, floors, and ceilings.
+* **CON\_BIM\_VIEW**: BIM View - represents a specific way of looking at the model, whether it's a 2D plan, elevation, section, or 3D view.
 
 
-
-| Component    | Labels |
+| Component | Labels |
 | -------- | ------- |
-| named entities  | CARDINAL, DATE, EVENT, FAC, GPE, LANGUAGE, LAW, LOC, MONEY, NORP, ORDINAL, ORG, PERCENT, PERSON, PRODUCT, QUANTITY, TIME, WORK_OF_ART, CON-BIM-CATG, CON-BIM-FAML, CON-BIM-TYPE, CON-BIM-INST, CON-BIM-LEVL, CON-BIM-VIEW |
-| categories | ISOLATE, HIDE, QUANTIFY |
+| named entities  | CARDINAL, DATE, EVENT, FAC, GPE, LANGUAGE, LAW, LOC, MONEY, NORP, ORDINAL, ORG, PERCENT, PERSON, PRODUCT, QUANTITY, TIME, WORK\_OF\_ART, CON\_BIM\_CATG, CON\_BIM\_FAML, CON\_BIM\_TYPE, CON\_BIM\_INST, CON\_BIM\_LEVL, CON\_BIM\_VIEW |
+| categories | ISOLATE, HIDE, QUANTIFY, ZOOM\_IN, ZOOM\_OUT, PAN\_LEFT, PAN\_RIGHT, PAN\_UP, PAN\_DOWN, LOOK\_LEFT, LOOK\_RIGHT, LOOK\_UP, LOOK\_DOWN |
