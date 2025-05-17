@@ -15,8 +15,8 @@ public struct VimAssistantView: View {
     @State
     var assistant: VimAssistant = .init()
 
-    /// The handler to pass prediction information to.
-    var handler: VimAssistant.Handler = .init()
+//    /// The handler to pass prediction information to.
+//    var handler: VimAssistant.Handler = .init()
 
     @State
     var inputText: String = .empty
@@ -48,7 +48,10 @@ public struct VimAssistantView: View {
             predictionView
         }
         .onChange(of: assistant.prediction) { _, prediction in
-            handler.handle(vim: vim, prediction: prediction)
+            Task {
+                await assistant.handle(vim: vim, prediction: prediction)
+            }
+//            handler.handle(vim: vim, prediction: prediction)
         }
     }
 

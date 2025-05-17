@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import SwiftData
 import VimKit
 
 public class VimAssistant: ObservableObject, @unchecked Sendable {
@@ -110,5 +111,63 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
         guard let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
 
         return try? JSONDecoder().decode(VimPrediction.self, from: data)
+    }
+
+    /// Handles the specified prediction.
+    /// - Parameters:
+    ///   - vim: the vim object to update based on the given prediction.
+    ///   - prediction: the prediction to handle
+    func handle(vim: Vim, prediction: VimPrediction?) async {
+        guard let prediction, let bestPrediction = prediction.bestPrediction else { return }
+        let action = bestPrediction.action
+        switch action {
+        case .isolate:
+            let ids = search(vim: vim, in: prediction)
+            guard ids.isNotEmpty else { return }
+            await vim.isolate(ids: ids)
+        case .hide:
+            let ids = search(vim: vim, in: prediction)
+            guard ids.isNotEmpty else { return }
+            await vim.hide(ids: ids)
+        case .quantify:
+            break
+        case .zoomIn:
+            await vim.zoom()
+        case .zoomOut:
+            await vim.zoom(out: true)
+        case .lookLeft:
+            await vim.look(.left)
+        case .lookRight:
+            await vim.look(.right)
+        case .lookUp:
+            await vim.look(.up)
+        case .lookDown:
+            await vim.look(.down)
+        case .panLeft:
+            await vim.pan(.left)
+        case .panRight:
+            await vim.pan(.right)
+        case .panUp:
+            await vim.pan(.up)
+        case .panDown:
+            await vim.pan(.down)
+        }
+    }
+
+    /// Performs a fuzzy search using the levenshtein distance algorithm across the node tree to find the best results.
+    /// - Parameters:
+    ///   - vim: the vim object to search
+    ///   - prediction: the prediction to extract entity names from
+    /// - Returns: a set of node ids that match the prediction
+    private func search(vim: Vim, in prediction: VimPrediction) -> Set<Int> {
+        guard let tree = vim.tree else { return [] }
+        var ids: Set<Int> = .init()
+        let values = prediction.entities.map{ $0.value }
+        for entity in prediction.entities {
+            let searchResults = tree.search(entity.value)
+            guard let bestResult = searchResults.first else { continue }
+            ids.formUnion(bestResult.item.ids)
+        }
+        return ids
     }
 }
