@@ -162,7 +162,6 @@ public class VimAssistant: ObservableObject, @unchecked Sendable {
     private func search(vim: Vim, in prediction: VimPrediction) -> Set<Int> {
         guard let tree = vim.tree else { return [] }
         var ids: Set<Int> = .init()
-        let values = prediction.entities.map{ $0.value }
         for entity in prediction.entities {
             let searchResults = tree.search(entity.value)
             guard let bestResult = searchResults.first else { continue }
