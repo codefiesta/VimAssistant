@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import SwiftData
 import VimKit
 
 public class VimAssistant: ObservableObject, @unchecked Sendable {
